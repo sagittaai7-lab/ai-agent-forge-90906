@@ -30,7 +30,11 @@ const statusLabels = {
   concluido: 'Concluído'
 };
 
-export function AgendaCalendar() {
+interface Props {
+  searchTerm?: string;
+}
+
+export function AgendaCalendar({ searchTerm = '' }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,8 +76,17 @@ export function AgendaCalendar() {
   });
 
   const getAgendamentosForDay = (day: Date) => {
-    return agendamentos.filter(ag => 
+    const dayAgendamentos = agendamentos.filter(ag => 
       isSameDay(new Date(ag.hora_inicio), day)
+    );
+    
+    if (!searchTerm) return dayAgendamentos;
+    
+    const search = searchTerm.toLowerCase();
+    return dayAgendamentos.filter((ag) =>
+      ag.cliente.nome.toLowerCase().includes(search) ||
+      ag.profissional.nome.toLowerCase().includes(search) ||
+      ag.servico.nome.toLowerCase().includes(search)
     );
   };
 

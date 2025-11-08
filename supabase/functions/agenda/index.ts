@@ -351,14 +351,47 @@ serve(async (req) => {
           if (method === 'POST') {
             const body = await req.json();
 
-            // Buscar duração do serviço
+            // Validações de segurança
+            const { data: profissional } = await supabaseClient
+              .from('profissionais')
+              .select('empresa_id')
+              .eq('id', body.profissional_id)
+              .single();
+
+            if (!profissional || profissional.empresa_id !== companyId) {
+              return new Response(JSON.stringify({ error: 'Profissional não pertence a esta empresa' }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+              });
+            }
+
             const { data: servico, error: servicoError } = await supabaseClient
               .from('servicos')
-              .select('duracao_minutos')
+              .select('duracao_minutos, empresa_id')
               .eq('id', body.servico_id)
               .single();
 
             if (servicoError) throw servicoError;
+
+            if (servico.empresa_id !== companyId) {
+              return new Response(JSON.stringify({ error: 'Serviço não pertence a esta empresa' }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+              });
+            }
+
+            const { data: cliente } = await supabaseClient
+              .from('clientes')
+              .select('empresa_id')
+              .eq('id', body.cliente_id)
+              .single();
+
+            if (!cliente || cliente.empresa_id !== companyId) {
+              return new Response(JSON.stringify({ error: 'Cliente não pertence a esta empresa' }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+              });
+            }
 
             // Calcular hora_fim
             const horaInicio = new Date(body.hora_inicio);
@@ -396,6 +429,37 @@ serve(async (req) => {
           // PUT /companies/:id/appointments/:appointment_id
           if (method === 'PUT') {
             const body = await req.json();
+
+            // Validações de segurança
+            if (body.profissional_id) {
+              const { data: profissional } = await supabaseClient
+                .from('profissionais')
+                .select('empresa_id')
+                .eq('id', body.profissional_id)
+                .single();
+
+              if (!profissional || profissional.empresa_id !== companyId) {
+                return new Response(JSON.stringify({ error: 'Profissional não pertence a esta empresa' }), {
+                  status: 400,
+                  headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+              }
+            }
+
+            if (body.servico_id) {
+              const { data: servico } = await supabaseClient
+                .from('servicos')
+                .select('empresa_id')
+                .eq('id', body.servico_id)
+                .single();
+
+              if (!servico || servico.empresa_id !== companyId) {
+                return new Response(JSON.stringify({ error: 'Serviço não pertence a esta empresa' }), {
+                  status: 400,
+                  headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+              }
+            }
 
             // Se mudou a hora ou o serviço, recalcular hora_fim
             let updateData = { ...body };

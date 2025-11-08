@@ -14,6 +14,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Pencil, Trash2, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { EditarAgendamentoDialog } from "./EditarAgendamentoDialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface Agendamento {
   id: string;
@@ -41,9 +43,18 @@ const statusLabels = {
   concluido: 'Concluído'
 };
 
-export function AgendaList() {
+interface Props {
+  searchTerm?: string;
+}
+
+export function AgendaList({ searchTerm = '' }: Props) {
+  const { toast } = useToast();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editDialog, setEditDialog] = useState<{ open: boolean; agendamento: any }>({
+    open: false,
+    agendamento: null
+  });
 
   useEffect(() => {
     loadAgendamentos();
@@ -81,11 +92,33 @@ export function AgendaList() {
         .eq('id', id);
 
       if (error) throw error;
+      
+      toast({
+        title: "Agendamento cancelado",
+        description: "O agendamento foi cancelado com sucesso.",
+      });
+      
       loadAgendamentos();
     } catch (error) {
       console.error('Erro ao cancelar agendamento:', error);
+      toast({
+        title: "Erro ao cancelar",
+        description: "Não foi possível cancelar o agendamento.",
+        variant: "destructive"
+      });
     }
   };
+
+  const filteredAgendamentos = agendamentos.filter((ag) => {
+    if (!searchTerm) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      ag.cliente.nome.toLowerCase().includes(search) ||
+      ag.profissional.nome.toLowerCase().includes(search) ||
+      ag.servico.nome.toLowerCase().includes(search) ||
+      ag.cliente.telefone?.toLowerCase().includes(search)
+    );
+  });
 
   if (loading) {
     return <div className="text-center py-8">Carregando...</div>;
@@ -106,14 +139,14 @@ export function AgendaList() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {agendamentos.length === 0 ? (
+          {filteredAgendamentos.length === 0 ? (
             <TableRow>
               <TableCell colSpan={7} className="text-center text-muted-foreground">
-                Nenhum agendamento encontrado
+                {searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum agendamento encontrado'}
               </TableCell>
             </TableRow>
           ) : (
-            agendamentos.map((ag) => (
+            filteredAgendamentos.map((ag) => (
               <TableRow key={ag.id}>
                 <TableCell>
                   <div className="flex items-center gap-2">
@@ -155,7 +188,11 @@ export function AgendaList() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon">
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => setEditDialog({ open: true, agendamento: ag })}
+                    >
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button 
@@ -173,6 +210,13 @@ export function AgendaList() {
           )}
         </TableBody>
       </Table>
+
+      <EditarAgendamentoDialog
+        open={editDialog.open}
+        onOpenChange={(open) => setEditDialog({ open, agendamento: null })}
+        onSuccess={loadAgendamentos}
+        agendamento={editDialog.agendamento}
+      />
     </Card>
   );
 }

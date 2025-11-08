@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
-import { Calendar, List, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Calendar, List, Plus, Search, X } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AgendaCalendar } from "@/components/agenda/AgendaCalendar";
 import { AgendaList } from "@/components/agenda/AgendaList";
@@ -13,6 +14,7 @@ export default function Agenda() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [empresaDialogOpen, setEmpresaDialogOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleAgendamentoCriado = () => {
     setRefreshKey(prev => prev + 1);
@@ -50,6 +52,27 @@ export default function Agenda() {
             </div>
           </div>
 
+          {/* Busca Global */}
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por cliente, profissional, serviço ou telefone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-10"
+            />
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                onClick={() => setSearchTerm("")}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
           {/* Tabs */}
           <Tabs defaultValue="calendar" className="w-full">
             <TabsList className="mb-6">
@@ -64,11 +87,11 @@ export default function Agenda() {
             </TabsList>
 
             <TabsContent value="calendar">
-              <AgendaCalendar key={`calendar-${refreshKey}`} />
+              <AgendaCalendar key={`calendar-${refreshKey}`} searchTerm={searchTerm} />
             </TabsContent>
 
             <TabsContent value="list">
-              <AgendaList key={`list-${refreshKey}`} />
+              <AgendaList key={`list-${refreshKey}`} searchTerm={searchTerm} />
             </TabsContent>
           </Tabs>
         </div>
