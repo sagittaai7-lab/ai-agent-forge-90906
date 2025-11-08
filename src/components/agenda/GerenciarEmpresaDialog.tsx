@@ -11,8 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, Users, Briefcase, UserPlus } from "lucide-react";
+import { Building2, Users, Briefcase, UserPlus, FileJson } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ImportadorJsonDialog } from "./ImportadorJsonDialog";
 
 interface Props {
   open: boolean;
@@ -23,6 +24,7 @@ export function GerenciarEmpresaDialog({ open, onOpenChange }: Props) {
   const { toast } = useToast();
   const [empresas, setEmpresas] = useState<any[]>([]);
   const [empresaSelecionada, setEmpresaSelecionada] = useState('');
+  const [importadorOpen, setImportadorOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -42,7 +44,17 @@ export function GerenciarEmpresaDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Gerenciar Empresa</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>Gerenciar Empresa</DialogTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setImportadorOpen(true)}
+            >
+              <FileJson className="mr-2 h-4 w-4" />
+              Importar/Exportar JSON
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -87,6 +99,18 @@ export function GerenciarEmpresaDialog({ open, onOpenChange }: Props) {
             </TabsContent>
           </Tabs>
         </div>
+
+        <ImportadorJsonDialog
+          open={importadorOpen}
+          onOpenChange={setImportadorOpen}
+          onSuccess={() => {
+            loadEmpresas();
+            toast({
+              title: "Dados atualizados!",
+              description: "A lista foi recarregada com os novos dados.",
+            });
+          }}
+        />
       </DialogContent>
     </Dialog>
   );
