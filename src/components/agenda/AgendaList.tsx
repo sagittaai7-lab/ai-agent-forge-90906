@@ -16,6 +16,7 @@ import { Pencil, Trash2, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { EditarAgendamentoDialog } from "./EditarAgendamentoDialog";
 import { useToast } from "@/hooks/use-toast";
+import { FiltrosAgendaData } from "./FiltrosAgenda";
 
 interface Agendamento {
   id: string;
@@ -45,9 +46,10 @@ const statusLabels = {
 
 interface Props {
   searchTerm?: string;
+  filtros?: FiltrosAgendaData;
 }
 
-export function AgendaList({ searchTerm = '' }: Props) {
+export function AgendaList({ searchTerm = '', filtros = {} }: Props) {
   const { toast } = useToast();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,12 +60,12 @@ export function AgendaList({ searchTerm = '' }: Props) {
 
   useEffect(() => {
     loadAgendamentos();
-  }, []);
+  }, [filtros]);
 
   const loadAgendamentos = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('agendamentos')
         .select(`
           *,
@@ -72,8 +74,25 @@ export function AgendaList({ searchTerm = '' }: Props) {
           servico:servicos(nome, preco)
         `)
         .order('data', { ascending: false })
-        .order('hora_inicio', { ascending: false })
-        .limit(50);
+        .order('hora_inicio', { ascending: false });
+
+      if (filtros.empresaId) {
+        query = query.eq('empresa_id', filtros.empresaId);
+      }
+      if (filtros.profissionalId) {
+        query = query.eq('profissional_id', filtros.profissionalId);
+      }
+      if (filtros.status && filtros.status.length > 0) {
+        query = query.in('status', filtros.status as any);
+      }
+      if (filtros.dataInicio) {
+        query = query.gte('data', filtros.dataInicio);
+      }
+      if (filtros.dataFim) {
+        query = query.lte('data', filtros.dataFim);
+      }
+
+      const { data, error } = await query.limit(50);
 
       if (error) throw error;
       setAgendamentos(data || []);

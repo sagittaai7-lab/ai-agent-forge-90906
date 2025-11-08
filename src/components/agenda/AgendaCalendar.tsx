@@ -5,13 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { FiltrosAgendaData } from "./FiltrosAgenda";
 
 interface Agendamento {
   id: string;
   hora_inicio: string;
   hora_fim: string;
   status: 'pendente' | 'confirmado' | 'cancelado' | 'concluido';
-  cliente: { nome: string };
+  cliente: { nome: string; telefone: string };
   profissional: { nome: string };
   servico: { nome: string };
 }
@@ -32,16 +33,17 @@ const statusLabels = {
 
 interface Props {
   searchTerm?: string;
+  filtros?: FiltrosAgendaData;
 }
 
-export function AgendaCalendar({ searchTerm = '' }: Props) {
+export function AgendaCalendar({ searchTerm = '', filtros = {} }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadAgendamentos();
-  }, [selectedDate]);
+  }, [selectedDate, filtros]);
 
   const loadAgendamentos = async () => {
     try {
@@ -49,17 +51,36 @@ export function AgendaCalendar({ searchTerm = '' }: Props) {
       const weekStart = startOfWeek(selectedDate, { locale: ptBR });
       const weekEnd = endOfWeek(selectedDate, { locale: ptBR });
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('agendamentos')
         .select(`
           *,
-          cliente:clientes(nome),
+          cliente:clientes(nome, telefone),
           profissional:profissionais(nome),
           servico:servicos(nome)
         `)
         .gte('data', format(weekStart, 'yyyy-MM-dd'))
         .lte('data', format(weekEnd, 'yyyy-MM-dd'))
         .order('hora_inicio');
+
+      // Aplicar filtros
+      if (filtros.empresaId) {
+        query = query.eq('empresa_id', filtros.empresaId);
+      }
+      if (filtros.profissionalId) {
+        query = query.eq('profissional_id', filtros.profissionalId);
+      }
+      if (filtros.status && filtros.status.length > 0) {
+        query = query.in('status', filtros.status as any);
+      }
+      if (filtros.dataInicio) {
+        query = query.gte('data', filtros.dataInicio);
+      }
+      if (filtros.dataFim) {
+        query = query.lte('data', filtros.dataFim);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setAgendamentos(data || []);
@@ -86,7 +107,8 @@ export function AgendaCalendar({ searchTerm = '' }: Props) {
     return dayAgendamentos.filter((ag) =>
       ag.cliente.nome.toLowerCase().includes(search) ||
       ag.profissional.nome.toLowerCase().includes(search) ||
-      ag.servico.nome.toLowerCase().includes(search)
+      ag.servico.nome.toLowerCase().includes(search) ||
+      (ag.cliente.telefone && ag.cliente.telefone.includes(search))
     );
   };
 

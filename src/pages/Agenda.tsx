@@ -8,6 +8,7 @@ import { AgendaCalendar } from "@/components/agenda/AgendaCalendar";
 import { AgendaList } from "@/components/agenda/AgendaList";
 import { NovoAgendamentoDialog } from "@/components/agenda/NovoAgendamentoDialog";
 import { GerenciarEmpresaDialog } from "@/components/agenda/GerenciarEmpresaDialog";
+import { FiltrosAgenda, FiltrosAgendaData } from "@/components/agenda/FiltrosAgenda";
 import { Settings } from "lucide-react";
 
 export default function Agenda() {
@@ -15,6 +16,7 @@ export default function Agenda() {
   const [empresaDialogOpen, setEmpresaDialogOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filtros, setFiltros] = useState<FiltrosAgendaData>({});
 
   const handleAgendamentoCriado = () => {
     setRefreshKey(prev => prev + 1);
@@ -26,9 +28,9 @@ export default function Agenda() {
       <AppSidebar />
       
       <main className="flex-1 p-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold text-foreground mb-2">
                 Agenda
@@ -73,6 +75,9 @@ export default function Agenda() {
             )}
           </div>
 
+          {/* Filtros */}
+          <FiltrosAgenda onFiltrosChange={setFiltros} />
+
           {/* Tabs */}
           <Tabs defaultValue="calendar" className="w-full">
             <TabsList className="mb-6">
@@ -87,11 +92,19 @@ export default function Agenda() {
             </TabsList>
 
             <TabsContent value="calendar">
-              <AgendaCalendar key={`calendar-${refreshKey}`} searchTerm={searchTerm} />
+              <AgendaCalendar 
+                key={`calendar-${refreshKey}`} 
+                searchTerm={searchTerm} 
+                filtros={filtros}
+              />
             </TabsContent>
 
             <TabsContent value="list">
-              <AgendaList key={`list-${refreshKey}`} searchTerm={searchTerm} />
+              <AgendaList 
+                key={`list-${refreshKey}`} 
+                searchTerm={searchTerm}
+                filtros={filtros}
+              />
             </TabsContent>
           </Tabs>
         </div>
