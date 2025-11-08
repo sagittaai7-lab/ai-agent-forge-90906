@@ -1,0 +1,89 @@
+import { useState } from "react";
+import { AppSidebar } from "@/components/AppSidebar";
+import { Button } from "@/components/ui/button";
+import { Calendar, List, Plus } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AgendaCalendar } from "@/components/agenda/AgendaCalendar";
+import { AgendaList } from "@/components/agenda/AgendaList";
+import { NovoAgendamentoDialog } from "@/components/agenda/NovoAgendamentoDialog";
+import { GerenciarEmpresaDialog } from "@/components/agenda/GerenciarEmpresaDialog";
+import { Settings } from "lucide-react";
+
+export default function Agenda() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [empresaDialogOpen, setEmpresaDialogOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleAgendamentoCriado = () => {
+    setRefreshKey(prev => prev + 1);
+    setDialogOpen(false);
+  };
+
+  return (
+    <div className="flex min-h-screen bg-background">
+      <AppSidebar />
+      
+      <main className="flex-1 p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-4xl font-bold text-foreground mb-2">
+                Agenda
+              </h1>
+              <p className="text-muted-foreground">
+                Gerencie agendamentos, clientes e profissionais
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setEmpresaDialogOpen(true)}
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Gerenciar Empresa
+              </Button>
+              <Button onClick={() => setDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Agendamento
+              </Button>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <Tabs defaultValue="calendar" className="w-full">
+            <TabsList className="mb-6">
+              <TabsTrigger value="calendar" className="gap-2">
+                <Calendar className="h-4 w-4" />
+                Calendário
+              </TabsTrigger>
+              <TabsTrigger value="list" className="gap-2">
+                <List className="h-4 w-4" />
+                Lista
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="calendar">
+              <AgendaCalendar key={`calendar-${refreshKey}`} />
+            </TabsContent>
+
+            <TabsContent value="list">
+              <AgendaList key={`list-${refreshKey}`} />
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <NovoAgendamentoDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          onSuccess={handleAgendamentoCriado}
+        />
+
+        <GerenciarEmpresaDialog
+          open={empresaDialogOpen}
+          onOpenChange={setEmpresaDialogOpen}
+        />
+      </main>
+    </div>
+  );
+}

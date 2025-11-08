@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import CreateAgent from "./pages/CreateAgent";
 import Settings from "./pages/Settings";
+import Agenda from "./pages/Agenda";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/create-agent" element={<CreateAgent />} />
+          <Route path="/agenda" element={<Agenda />} />
           <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

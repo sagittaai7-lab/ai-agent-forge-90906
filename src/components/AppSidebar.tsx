@@ -1,4 +1,4 @@
-import { IconRobot, IconPlus, IconSettings, IconLogout, IconBrandOpenai, IconChartBar, IconUsers, IconCalendar } from "@tabler/icons-react";
+import { IconRobot, IconPlus, IconSettings, IconLogout, IconBrandOpenai, IconChartBar, IconUsers, IconCalendar, IconCalendarClock } from "@tabler/icons-react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar-custom";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
@@ -22,6 +22,13 @@ const mainLinks = [
 ];
 
 const secondaryLinks = [
+  {
+    label: "Agenda",
+    href: "/agenda",
+    icon: (
+      <IconCalendarClock className="h-5 w-5 shrink-0 text-foreground" />
+    ),
+  },
   {
     label: "Análises",
     href: "/analytics",
